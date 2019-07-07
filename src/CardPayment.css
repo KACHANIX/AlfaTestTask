@@ -1,22 +1,52 @@
+@font-face {
+    font-family: "Segoe UI";
+    font-weight: 300;
+    src: local("Segoe UI Semilight"), local("Segoe UI");
+}
 #credit-card-form {
-    padding-left: 15px;
+    padding: 15px;
     width: 500px;
     border: 2px solid #CFCFCF;
-    height: 400px;
+    height: 370px;
     border-radius: 20px;
+    background-color: #F3F4F5;
+    color: #546271;
+/*font-family: "Segoe UI";*/
 }
-
-label{
+label {
     display: block;
-    color: red;
+    color: #F04539;
     text-decoration: underline;
     visibility: hidden;
 }
 
-.inline-block{
+select{
+    width: 70px;
+}
+.expiry{
+    width: 70px;
+}
+
+.inline-block {
     display: inline-block;
 }
+
+.year{
+    margin-left: 42px;
+}
+
 #cvc{
-    width: 50px;
+    width: 70px;
     text-align: center;
+}
+
+.cvc {
+margin-left: 30px;
+}
+#pay-btn{
+    margin-top: 5px;
+}
+
+#card-holder {
+    text-transform: uppercase;
 }

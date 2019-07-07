@@ -1,24 +1,23 @@
 import React from 'react';
 import './CardPayment.css';
 import Button from 'arui-feather/button';
-import Attach from 'arui-feather/attach';
-import Calendar from 'arui-feather/calendar';
 import CardInput from 'arui-feather/card-input';
 import Select from 'arui-feather/select';
 import Input from 'arui-feather/input';
 import Form from 'arui-feather/form';
 import * as myLib from './myLib.js';
+import MoneyInput from 'arui-feather/money-input';
+
 
 class CardPayment extends React.Component {
+    constructor(props) {
+        super(props);
 
-
-    constructor() {
-        super();
+        //События-слушатели и state компонента
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleCardNumberChange = this.handleCardNumberChange.bind(this);
         this.handleCardNumberBlur = this.handleCardNumberBlur.bind(this);
 
-        // this.handleCVCKeyDown = this.handleCVCKeyDown.bind(this);
         this.handleCardholderKeyDown = this.handleCardholderKeyDown.bind(this);
         this.handleCardholderBlur = this.handleCardholderBlur.bind(this);
         this.handleCardholderChange = this.handleCardholderChange.bind(this);
@@ -29,9 +28,15 @@ class CardPayment extends React.Component {
         this.handleCVCChange = this.handleCVCChange.bind(this);
         this.handleCVCBlur = this.handleCVCBlur.bind(this);
 
+        this.handleSumBlur = this.handleSumBlur.bind(this);
+        this.handleSumChange = this.handleSumChange.bind(this);
+
+        this.unblockPayButton = this.unblockPayButton.bind(this);
+
         this.state =
             {
-                cardNumber: 0,
+                transferSum: "",
+                cardNumber: "",
                 cardholderName: "",
                 expirationMonth: "",
                 expirationYear: "",
@@ -39,132 +44,201 @@ class CardPayment extends React.Component {
             };
     }
 
+    componentDidMount() {
+        //задаем задний фон кнопки темнее основного, показывая, что кнопка заблокирована
+        document.getElementById('pay-btn').style.backgroundColor = '\t#D1D2D3';
+    }
+
     handleSubmit(e) {
-        e.preventDefault();
-        alert(this.state.cardNumber);
+        // здесь заглушка; если нужно отправлять данные куда-либо, то подойдет кусок кода приведенный ниже
+
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "/json-handler");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify(
+            {
+                transferSum: this.state.transferSum,
+                cardNumber: parseInt(this.state.cardNumber),
+                cardholderName: this.state.cardholderName,
+                expirationDate: this.state.expirationMonth + '/' + this.state.expirationYear,
+                cvc: this.state.cvc
+            }));
     }
 
     handleCardNumberChange(e) {
         // возможно, я тупой, но ловить новое значение через e.target.value для CardInput
         // у меня не вышло, при этом e.target.value для дефолтных полей ввода работает
         let cardNumberInput = document.getElementById('card-number');
-        let labels = Array.from(document.getElementsByTagName('label'));
-        let cardNumberLabel;
-        labels.forEach(function (label) {
-            if (label.htmlFor === 'card-number') {
-                cardNumberLabel = label;
-            }
-        });
 
         // минимальная длина 19 так как при введенных 16 символах присутствует три разделителя
         if (cardNumberInput.value.length < this.state.cardNumber.length
             && this.state.cardNumber.length === 19) {
-            // cardNumberLabel.style.visibility = 'visible';
             myLib.showNumberError();
         }
         if (cardNumberInput.value.length >= 19) {
-            // cardNumberLabel.style.visibility = 'hidden';
             myLib.hideNumberError();
-
         }
-
         this.setState({cardNumber: cardNumberInput.value});
+        this.unblockPayButton();
+
     }
 
     handleCardNumberBlur(e) {
         let cardNumberInput = document.getElementById('card-number');
-        let labels = Array.from(document.getElementsByTagName('label'));
-
         if (cardNumberInput.value.length < 19) {
-            // labels.forEach(function (label) {
-            //     if (label.htmlFor === 'card-number') {
-            //         label.style.visibility = 'visible';
-            //     }
-            // });
             myLib.showNumberError()
         } else {
-            // labels.forEach(function (label) {
-            //     if (label.htmlFor === 'card-number') {
-            //         label.style.visibility = 'hidden';
-            //     }
-            // });
             myLib.hideNumberError()
-
         }
+        this.unblockPayButton();
+
     }
 
     handleCardholderKeyDown(e) {
         let keyCode = e.keyCode;
         let keyChar = e.key;
         let pattern = /[\u0400-\u04FF]/; // чтобы отсеять кириллицу
-        // не пускаем спецсимволы, цифры итд, но пускаем стрелки, шифты контролы итд
+        // не пускаем спецсимволы, цифры, но пускаем стрелки, шифты контролы итд
         if (!(keyCode >= 65 && keyCode <= 90 || keyCode <= 46) || pattern.test(keyChar)) {
             e.preventDefault();
         }
     }
 
     handleCardholderBlur(e) {
+        //проверяем наличие двух слов в имени владельца карты
         let values = e.target.value.split(' ').filter(function (v) {
             return v !== ''
         });
-        let labels = Array.from(document.getElementsByTagName('label'));
-        let cardHolderLabel;
-        labels.forEach(function (label) {
-            if (label.htmlFor === 'card-holder') {
-                cardHolderLabel = label;
-            }
-        });
         if (values.length !== 2) {
-            cardHolderLabel.style.visibility = 'visible';
+            myLib.showHolderError()
         } else {
-            cardHolderLabel.style.visibility = 'hidden';
+            myLib.hideHolderError()
         }
+        this.unblockPayButton();
+
     }
 
     handleCardholderChange() {
-        let cardholder = document.getElementById('card-holder').value;
-        let labels = Array.from(document.getElementsByTagName('label'));
+        //проверяем наличие двух слов в имени владельца карты
+
+        let cardholder = document.getElementById('card-holder').value.toUpperCase();
         let values = cardholder.split(' ').filter(function (v) {
             return v !== ''
-        });
-
-        let cardHolderLabel;
-        labels.forEach(function (label) {
-            if (label.htmlFor === 'card-holder') {
-                cardHolderLabel = label;
-            }
         });
         if (values.length !== 2
             && this.state.cardholderName.split(' ').filter(function (v) {
                 return v !== ''
             }).length === 2) {
-            cardHolderLabel.style.visibility = 'visible';
+            myLib.showHolderError()
         }
         if (values.length === 2) {
-            cardHolderLabel.style.visibility = 'hidden';
+            myLib.hideHolderError();
         }
-
-
         this.setState({cardholderName: cardholder});
+        this.unblockPayButton();
     }
 
     handleMonthBlur(e) {
-        // alert(e.target.value == '');
+        //проверяем, не просрочена ли карта
+
         this.setState({expirationMonth: e.target.value});
+        if (this.state.expirationMonth != '' && this.state.expirationYear != '') {
+            myLib.checkDate();
+        }
+        this.unblockPayButton();
     }
 
     handleYearBlur(e) {
+        //проверяем, не просрочена ли карта
+
         this.setState({expirationYear: e.target.value});
+        if (this.state.expirationMonth != '' && this.state.expirationYear != '') {
+            myLib.checkDate();
+        }
+        this.unblockPayButton();
     }
 
     handleCVCChange(e) {
+        //проверяем наличие трех символов в CVC коде
 
+        let cvc = document.getElementById('cvc');
+
+        if (cvc.value.length < this.state.cvc
+            && this.state.cvc.length === 3) {
+            myLib.showCVCError();
+        }
+        if (cvc.value.length === 3) {
+            myLib.hideCVCError();
+        }
+
+        this.setState({cvc: cvc.value});
+        this.unblockPayButton();
+
+        // if
     }
 
     handleCVCBlur(e) {
+        //проверяем наличие трех символов в CVC коде
 
+        if (e.target.value.length < 3) {
+            myLib.showCVCError();
+        } else {
+            myLib.hideCVCError();
+        }
+        this.unblockPayButton();
     }
 
+    handleSumChange(e) {
+        //проверяем, что сумма не ноль
+
+        let sum = document.getElementById('sum').value.replace(',', '.');
+        if (parseFloat(sum) > 0) {
+            myLib.hideSumError();
+        }
+        this.setState({transferSum: parseFloat(sum)});
+        this.unblockPayButton();
+    }
+
+    handleSumBlur(e) {
+        //проверяем, что сумма не ноль
+
+        if (e.target.value == 0) {
+            myLib.showSumError();
+        }
+        e.target.placeholder = 'Transfer amount';
+        this.unblockPayButton();
+    }
+
+
+    unblockPayButton() {
+        //проверяем заполненность всех полей и разблокировываем кнопку, если это так, иначе - блокируем
+
+
+        // console.log('\n');
+        // console.log(this.state.transferSum > 0);
+        // console.log(this.state.cardNumber.length >= 19);
+        // console.log(this.state.cardholderName.split(' ').filter(function (v) {
+        //     return v !== ''
+        // }).length === 2);
+        // console.log(myLib.checkDate());
+        // console.log(this.state.cvc.length == 3);
+
+        if (this.state.transferSum > 0 && this.state.cardNumber.length >= 19
+            && this.state.cardholderName.split(' ').filter(function (v) {
+                return v !== ''
+            }).length === 2
+            && myLib.checkDate()
+            && this.state.cvc.length === 3) {
+            console.log("zaebis'!");
+            document.getElementById('pay-btn').disabled = false;
+            document.getElementById('pay-btn').style.backgroundColor = '\t#F3F4F5';
+            alert();
+        } else {
+            document.getElementById('pay-btn').disabled = true;
+            document.getElementById('pay-btn').style.backgroundColor = '\t#D1D2D3';
+        }
+    }
 
     render() {
         const currYear = (new Date().getFullYear()) % 100;
@@ -198,6 +272,12 @@ class CardPayment extends React.Component {
         return (
             <div className="payment_form">
                 <Form onSubmit={this.handleSubmit} id="credit-card-form">
+                    <div>
+                        <MoneyInput id="sum" placeholder="Transfer amount" showCurrency={true}
+                                    onChange={this.handleSumChange} onBlur={this.handleSumBlur}
+                                    onFocus={(e) => e.target.placeholder = ''}/>
+                        <label htmlFor="sum">Transfer amount must be greater than 0!</label>
+                    </div>
                     <h3>Input information provided on credit card</h3>
                     <div>
                         <CardInput id="card-number" placeholder="Card number"
@@ -208,30 +288,35 @@ class CardPayment extends React.Component {
                         <Input id="card-holder" placeholder="Card holder" onKeyDown={this.handleCardholderKeyDown}
                                onBlur={this.handleCardholderBlur}
                                onChange={this.handleCardholderChange}
-                               pattern="[A-Za-z, ]{2,}"/>
-                        <label htmlFor="card-holder">Card holder must contain 2 words!</label>
+                               pattern="[A-Za-z, ]{2,}"
+                        />
+                        <label htmlFor="card-holder">Card holder name must contain 2 words!</label>
                     </div>
-                    <br/>
                     <div>
                         <div className="inline-block">
-                            <Select id="month" placeholder="MM" mode="radio-check" maxHeight={160}
-                                    onBlur={this.handleMonthBlur} options={optionMonths}/>
-                            <Select id="year" placeholder="YY" mode="radio-check" maxHeight={160}
-                                    onBlur={this.handleMonthBlur} options={optionYears}/>
+                            <div className="inline-block expiry">
+                                <Select id="month" placeholder="MM" mode="radio-check" maxHeight={160}
+                                        width="available" onBlur={this.handleMonthBlur} options={optionMonths}/>
+                            </div>
+
+                            <div className="inline-block expiry year">
+                                <Select id="year" placeholder="YY" mode="radio-check" maxHeight={160}
+                                        width="available" onBlur={this.handleYearBlur} options={optionYears}/>
+                            </div>
+
                             <label htmlFor="month">Wrong expiration date!</label>
                         </div>
-                        <div className="inline-block">
-                            <Input id="cvc" placeholder="CVC" type="password" maxLength={3} size="s" mask="111"/>
+                        <div className="inline-block cvc">
+                            <Input id="cvc" placeholder="CVC/CVV" type="password" maxLength={3}
+                                   onBlur={this.handleCVCBlur} onChange={this.handleCVCChange} size="s" mask="111"/>
                             <label htmlFor="cvc">CVC must contain 3 digits</label>
                         </div>
                     </div>
-                    <Button theme="alfa-on-white" type="submit" text="Pay"/>
+                    <Button id="pay-btn" disabled="true" theme="alfa-on-white" type="submit" text="Pay"/>
                 </Form>
             </div>
         );
     }
-
-
 }
 
 export default CardPayment;
