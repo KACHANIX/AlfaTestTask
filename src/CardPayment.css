@@ -1,0 +1,22 @@
+#credit-card-form {
+    padding-left: 15px;
+    width: 500px;
+    border: 2px solid #CFCFCF;
+    height: 400px;
+    border-radius: 20px;
+}
+
+label{
+    display: block;
+    color: red;
+    text-decoration: underline;
+    visibility: hidden;
+}
+
+.inline-block{
+    display: inline-block;
+}
+#cvc{
+    width: 50px;
+    text-align: center;
+}
