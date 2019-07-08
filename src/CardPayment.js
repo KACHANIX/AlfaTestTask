@@ -10,6 +10,7 @@ import MoneyInput from 'arui-feather/money-input';
 import IconVisa from 'arui-feather/icon/brand/card-visa';
 import IconMaster from 'arui-feather/icon/brand/card-mastercard';
 import IconMir from 'arui-feather/icon/brand/card-mir';
+
 var lookup = require('binlookup')();
 
 class CardPayment extends React.Component {
@@ -50,7 +51,7 @@ class CardPayment extends React.Component {
     componentDidMount() {
         //задаем задний фон кнопки темнее основного, показывая, что кнопка заблокирована
 
-        document.getElementById('pay-btn').style.backgroundColor = '\t#e1e3e6';
+        document.getElementById('pay-btn').style.backgroundColor = '\t#CFD5DC';
         document.getElementById('pay-btn').style.cursor = 'default';
     }
 
@@ -127,7 +128,7 @@ class CardPayment extends React.Component {
                     if (err || data.bank.name == undefined) {
                         document.getElementById('bank').innerText = ' ';
 
-                    }else {
+                    } else {
                         document.getElementById('bank').innerText = data.bank.name;
 
                     }
@@ -341,13 +342,13 @@ class CardPayment extends React.Component {
                                 <Select id="month" placeholder="MM"
                                         mode="radio-check" maxHeight={160}
                                         width="available" onBlur={this.handleMonthBlur}
-                                        options={optionMonths}/>
+                                        options={optionMonths} equalPopupWidth={true}/>
                             </div>
                             <div className="inline-block expiry year">
                                 <Select id="year" placeholder="YY"
                                         mode="radio-check" maxHeight={160}
                                         width="available" onBlur={this.handleYearBlur}
-                                        options={optionYears}/>
+                                        options={optionYears} equalPopupWidth={true}/>
                             </div>
                             <label htmlFor="month">Wrong expiration date!</label>
                         </div>

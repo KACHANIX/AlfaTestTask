@@ -12,6 +12,7 @@
     border-radius: 20px;
     background-color: #F3F4F5;
     color: #546271;
+    /*color: #B6BCC3;*/
 }
 
 label {
@@ -21,9 +22,6 @@ label {
     visibility: hidden;
 }
 
-select {
-    width: 70px;
-}
 
 .icon {
     visibility: hidden;
