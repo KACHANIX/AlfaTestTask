@@ -7,7 +7,11 @@ import Input from 'arui-feather/input';
 import Form from 'arui-feather/form';
 import * as myLib from './myLib.js';
 import MoneyInput from 'arui-feather/money-input';
+import IconVisa from 'arui-feather/icon/brand/card-visa';
+import IconMaster from 'arui-feather/icon/brand/card-mastercard';
+import IconMir from 'arui-feather/icon/brand/card-mir';
 
+var lookup = require('binlookup')();
 
 class CardPayment extends React.Component {
     constructor(props) {
@@ -46,7 +50,9 @@ class CardPayment extends React.Component {
 
     componentDidMount() {
         //задаем задний фон кнопки темнее основного, показывая, что кнопка заблокирована
-        document.getElementById('pay-btn').style.backgroundColor = '\t#D1D2D3';
+
+        document.getElementById('pay-btn').style.backgroundColor = '\t#e1e3e6';
+        document.getElementById('pay-btn').style.cursor = 'default';
     }
 
     handleSubmit(e) {
@@ -67,22 +73,78 @@ class CardPayment extends React.Component {
         alert('Here the information must be send to backend');
     }
 
-    handleCardNumberChange(e) {
-        // возможно, я тупой, но ловить новое значение через e.target.value для CardInput
-        // у меня не вышло, при этом e.target.value для дефолтных полей ввода работает
-        let cardNumberInput = document.getElementById('card-number');
 
+    // разница между onBlur и  onChange  в том , что в первом варианте к изменениям приходится обращаться
+    // через e.target.value, а во втором просто через e (я чуть не вскрылся, пока не понял,
+    // как обращаться к изменениям, т.к. e.target в onChange равен undefined, хотя в дефолтных полях ввода все не так)
+    handleSumChange(e) {
+        //проверяем, что сумма не ноль
+
+        let sum = e.replace(',', '.');
+        if (parseFloat(sum) > 0) {
+            myLib.hideSumError();
+        }
+        this.state.transferSum = parseFloat(sum);
+        this.unblockPayButton();
+    }
+
+    handleSumBlur(e) {
+        //проверяем, что сумма не ноль
+
+        if (parseFloat(e.target.value) === 0) {
+            myLib.showSumError();
+        }
+        e.target.placeholder = 'Transfer amount'; // возвращаем плейсхолдер после того,
+        this.unblockPayButton();                  // как он был убран на onFocus
+    }
+
+    handleCardNumberChange(e) {
+        let cardNumberInput = e;
+        if (cardNumberInput[0] == 2) {
+            document.getElementById('master').style.visibility = 'hidden';
+            document.getElementById('visa').style.visibility = 'hidden';
+            document.getElementById('mir').style.visibility = 'visible';
+        } else if (cardNumberInput[0] == 4) {
+            document.getElementById('master').style.visibility = 'hidden';
+            document.getElementById('visa').style.visibility = 'visible';
+            document.getElementById('mir').style.visibility = 'hidden';
+
+        } else if (cardNumberInput[0] == 5) {
+            document.getElementById('master').style.visibility = 'visible';
+            document.getElementById('visa').style.visibility = 'hidden';
+            document.getElementById('mir').style.visibility = 'hidden';
+
+        } else {
+            document.getElementById('master').style.visibility = 'hidden';
+            document.getElementById('visa').style.visibility = 'hidden';
+            document.getElementById('mir').style.visibility = 'hidden';
+        }
+
+        if (cardNumberInput.length === 7) {
+            lookup(cardNumberInput.replace(/\s/g, ''),
+                function (err, data) {
+                    if (err || data.bank.name == undefined) {
+                        document.getElementById('bank').innerText = ' ';
+
+                    }else {
+                        document.getElementById('bank').innerText = data.bank.name;
+
+                    }
+
+                });
+        } else if (cardNumberInput.length < 7) {
+            document.getElementById('bank').innerText = ' ';
+        }
         // минимальная длина 19 так как при введенных 16 символах присутствует три разделителя
-        if (cardNumberInput.value.length < this.state.cardNumber.length
+        if (cardNumberInput.length < this.state.cardNumber.length
             && this.state.cardNumber.length === 19) {
             myLib.showNumberError();
         }
-        if (cardNumberInput.value.length >= 19) {
+        if (cardNumberInput.length >= 19) {
             myLib.hideNumberError();
         }
-        this.setState({cardNumber: cardNumberInput.value});
+        this.state.cardNumber = cardNumberInput;
         this.unblockPayButton();
-
     }
 
     handleCardNumberBlur(e) {
@@ -120,10 +182,10 @@ class CardPayment extends React.Component {
 
     }
 
-    handleCardholderChange() {
+    handleCardholderChange(e) {
         //проверяем наличие двух слов в имени владельца карты
 
-        let cardholder = document.getElementById('card-holder').value.toUpperCase();
+        let cardholder = e.toUpperCase();
         let values = cardholder.split(' ').filter(function (v) {
             return v !== ''
         });
@@ -136,7 +198,7 @@ class CardPayment extends React.Component {
         if (values.length === 2) {
             myLib.hideHolderError();
         }
-        this.setState({cardholderName: cardholder});
+        this.state.cardholderName = cardholder;
         this.unblockPayButton();
     }
 
@@ -162,18 +224,17 @@ class CardPayment extends React.Component {
 
     handleCVCChange(e) {
         //проверяем наличие трех символов в CVC коде
-
-        let cvc = document.getElementById('cvc');
-
-        if (cvc.value.length < this.state.cvc
+        let cvc = e;
+        console.log(document.getElementById('cvc').value);
+        if (cvc.length < this.state.cvc
             && this.state.cvc.length === 3) {
             myLib.showCVCError();
         }
-        if (cvc.value.length === 3) {
+        if (cvc.length === 3) {
             myLib.hideCVCError();
         }
 
-        this.setState({cvc: cvc.value});
+        this.state.cvc = cvc;
         this.unblockPayButton();
 
         // if
@@ -190,40 +251,8 @@ class CardPayment extends React.Component {
         this.unblockPayButton();
     }
 
-    handleSumChange(e) {
-        //проверяем, что сумма не ноль
-
-        let sum = document.getElementById('sum').value.replace(',', '.');
-        if (parseFloat(sum) > 0) {
-            myLib.hideSumError();
-        }
-        this.setState({transferSum: parseFloat(sum)});
-        this.unblockPayButton();
-    }
-
-    handleSumBlur(e) {
-        //проверяем, что сумма не ноль
-
-        if (e.target.value == 0) {
-            myLib.showSumError();
-        }
-        e.target.placeholder = 'Transfer amount';
-        this.unblockPayButton();
-    }
-
-
     unblockPayButton() {
-        //проверяем заполненность всех полей и разблокировываем кнопку, если это так, иначе - блокируем
-
-
-        // console.log('\n');
-        // console.log(this.state.transferSum > 0);
-        // console.log(this.state.cardNumber.length >= 19);
-        // console.log(this.state.cardholderName.split(' ').filter(function (v) {
-        //     return v !== ''
-        // }).length === 2);
-        // console.log(myLib.checkDate());
-        // console.log(this.state.cvc.length == 3);
+        //проверяем заполненность всех полей и разблокировываем кнопку, если это так; иначе - блокируем
 
         if (this.state.transferSum > 0 && this.state.cardNumber.length >= 19
             && this.state.cardholderName.split(' ').filter(function (v) {
@@ -231,13 +260,15 @@ class CardPayment extends React.Component {
             }).length === 2
             && myLib.checkDate()
             && this.state.cvc.length === 3) {
-            console.log("zaebis'!");
             document.getElementById('pay-btn').disabled = false;
             document.getElementById('pay-btn').style.backgroundColor = '\t#F3F4F5';
-            alert();
+            document.getElementById('pay-btn').style.cursor = 'pointer';
+
         } else {
             document.getElementById('pay-btn').disabled = true;
-            document.getElementById('pay-btn').style.backgroundColor = '\t#D1D2D3';
+            document.getElementById('pay-btn').style.backgroundColor = '\t#e1e3e6';
+            document.getElementById('pay-btn').style.cursor = 'default';
+
         }
     }
 
@@ -277,43 +308,60 @@ class CardPayment extends React.Component {
                         <MoneyInput id="sum" placeholder="Transfer amount" showCurrency={true}
                                     onChange={this.handleSumChange} onBlur={this.handleSumBlur}
                                     onFocus={(e) => e.target.placeholder = ''}/>
+                        {/*            onFocus здесь используется, так как при наличии одновременно и плейсхолдера
+                                       и валюты текст накладывается дург на друга
+                         */}
                         <label htmlFor="sum">Transfer amount must be greater than 0!</label>
                     </div>
                     <h3>Input information provided on credit card</h3>
                     <div>
                         <CardInput id="card-number" placeholder="Card number"
-                                   onBlur={this.handleCardNumberBlur} onChange={this.handleCardNumberChange}/>
+                                   onBlur={this.handleCardNumberBlur}
+                                   onChange={this.handleCardNumberChange}/>
+
+                        <IconVisa className="icon" id="visa" colored={true}/>
+                        <IconMaster className="icon" id="master" colored={true}/>
+                        <IconMir className="icon" id="mir" colored={true}/>
+                        <b id="bank"> </b>
+
                         <label htmlFor="card-number">Card number too short!</label>
                     </div>
                     <div>
-                        <Input id="card-holder" placeholder="Card holder" onKeyDown={this.handleCardholderKeyDown}
+                        <Input id="card-holder" placeholder="Card holder"
+                               onKeyDown={this.handleCardholderKeyDown}
                                onBlur={this.handleCardholderBlur}
                                onChange={this.handleCardholderChange}
-                               pattern="[A-Za-z, ]{2,}"
                         />
                         <label htmlFor="card-holder">Card holder name must contain 2 words!</label>
                     </div>
                     <div>
                         <div className="inline-block">
                             <div className="inline-block expiry">
-                                <Select id="month" placeholder="MM" mode="radio-check" maxHeight={160}
-                                        width="available" onBlur={this.handleMonthBlur} options={optionMonths}/>
+                                <Select id="month" placeholder="MM"
+                                        mode="radio-check" maxHeight={160}
+                                        width="available" onBlur={this.handleMonthBlur}
+                                        options={optionMonths}/>
                             </div>
-
                             <div className="inline-block expiry year">
-                                <Select id="year" placeholder="YY" mode="radio-check" maxHeight={160}
-                                        width="available" onBlur={this.handleYearBlur} options={optionYears}/>
+                                <Select id="year" placeholder="YY"
+                                        mode="radio-check" maxHeight={160}
+                                        width="available" onBlur={this.handleYearBlur}
+                                        options={optionYears}/>
                             </div>
-
                             <label htmlFor="month">Wrong expiration date!</label>
                         </div>
                         <div className="inline-block cvc">
-                            <Input id="cvc" placeholder="CVC/CVV" type="password" maxLength={3}
-                                   onBlur={this.handleCVCBlur} onChange={this.handleCVCChange} size="s" mask="111"/>
+                            <Input id="cvc" placeholder="CVC/CVV"
+                                   type="password" maxLength={3}
+                                   onBlur={this.handleCVCBlur}
+                                   onChange={this.handleCVCChange}
+                                   size="s" mask="111"/>
                             <label htmlFor="cvc">CVC must contain 3 digits</label>
                         </div>
                     </div>
-                    <Button id="pay-btn" disabled="true" theme="alfa-on-white" type="submit" text="Pay"/>
+                    <Button id="pay-btn" disabled="true"
+                            theme="alfa-on-white" type="submit"
+                            text="Pay"/>
                 </Form>
             </div>
         );
