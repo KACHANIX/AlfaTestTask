@@ -17,7 +17,7 @@ class CardPayment extends React.Component {
     constructor(props) {
         super(props);
 
-        //События-слушатели и state компонента
+        // События-слушатели и state компонента
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleCardNumberChange = this.handleCardNumberChange.bind(this);
         this.handleCardNumberBlur = this.handleCardNumberBlur.bind(this);
@@ -75,7 +75,7 @@ class CardPayment extends React.Component {
 
 
     // разница между onBlur и  onChange  в том , что в первом варианте к изменениям приходится обращаться
-    // через e.target.value, а во втором просто через e (я чуть не вскрылся, пока не понял,
+    // через e.target.value, а во втором просто через e (я чуть не вскрылся, пока пытался понять,
     // как обращаться к изменениям, т.к. e.target в onChange равен undefined, хотя в дефолтных полях ввода все не так)
     handleSumChange(e) {
         //проверяем, что сумма не ноль
@@ -89,7 +89,7 @@ class CardPayment extends React.Component {
     }
 
     handleSumBlur(e) {
-        //проверяем, что сумма не ноль
+        // проверяем, что сумма не ноль
 
         if (parseFloat(e.target.value) === 0) {
             myLib.showSumError();
@@ -100,7 +100,7 @@ class CardPayment extends React.Component {
 
     handleCardNumberChange(e) {
         let cardNumberInput = e;
-        //Захардкоженное определение платежной системы
+        // Захардкоженное определение платежной системы
         if (cardNumberInput[0] == 2) {
             document.getElementById('master').style.visibility = 'hidden';
             document.getElementById('visa').style.visibility = 'hidden';
@@ -121,7 +121,7 @@ class CardPayment extends React.Component {
             document.getElementById('mir').style.visibility = 'hidden';
         }
 
-        //Незахардкоженное определение банка
+        // Незахардкоженное определение банка
         if (cardNumberInput.length === 7) {
             lookup(cardNumberInput.replace(/\s/g, ''),
                 function (err, data) {
@@ -164,6 +164,7 @@ class CardPayment extends React.Component {
         let keyCode = e.keyCode;
         let keyChar = e.key;
         let pattern = /[\u0400-\u04FF]/; // чтобы отсеять кириллицу
+
         // не пускаем спецсимволы, цифры, но пускаем стрелки, шифты контролы итд
         if (!(keyCode >= 65 && keyCode <= 90 || keyCode <= 46) || pattern.test(keyChar)) {
             e.preventDefault();
@@ -171,7 +172,7 @@ class CardPayment extends React.Component {
     }
 
     handleCardholderBlur(e) {
-        //проверяем наличие двух слов в имени владельца карты
+        // проверяем наличие двух слов в имени владельца карты
         let values = e.target.value.split(' ').filter(function (v) {
             return v !== ''
         });
@@ -185,7 +186,7 @@ class CardPayment extends React.Component {
     }
 
     handleCardholderChange(e) {
-        //проверяем наличие двух слов в имени владельца карты
+        // проверяем наличие двух слов в имени владельца карты
 
         let cardholder = e.toUpperCase();
         let values = cardholder.split(' ').filter(function (v) {
@@ -205,7 +206,7 @@ class CardPayment extends React.Component {
     }
 
     handleMonthBlur(e) {
-        //проверяем, не просрочена ли карта
+        // проверяем, не просрочена ли карта
 
         this.setState({expirationMonth: e.target.value});
         if (this.state.expirationMonth != '' && this.state.expirationYear != '') {
@@ -215,7 +216,7 @@ class CardPayment extends React.Component {
     }
 
     handleYearBlur(e) {
-        //проверяем, не просрочена ли карта
+        // проверяем, не просрочена ли карта
 
         this.setState({expirationYear: e.target.value});
         if (this.state.expirationMonth != '' && this.state.expirationYear != '') {
@@ -225,7 +226,7 @@ class CardPayment extends React.Component {
     }
 
     handleCVCChange(e) {
-        //проверяем наличие трех символов в CVC коде
+        // проверяем наличие трех символов в CVC коде
         let cvc = e;
         console.log(document.getElementById('cvc').value);
         if (cvc.length < this.state.cvc
@@ -235,15 +236,12 @@ class CardPayment extends React.Component {
         if (cvc.length === 3) {
             myLib.hideCVCError();
         }
-
         this.state.cvc = cvc;
         this.unblockPayButton();
-
-        // if
     }
 
     handleCVCBlur(e) {
-        //проверяем наличие трех символов в CVC коде
+        // проверяем наличие трех символов в CVC коде
 
         if (e.target.value.length < 3) {
             myLib.showCVCError();
@@ -254,7 +252,7 @@ class CardPayment extends React.Component {
     }
 
     unblockPayButton() {
-        //проверяем заполненность всех полей и разблокировываем кнопку, если это так; иначе - блокируем
+        // проверяем заполненность всех полей и разблокировываем кнопку, если это так; иначе - блокируем
 
         if (this.state.transferSum > 0 && this.state.cardNumber.length >= 19
             && this.state.cardholderName.split(' ').filter(function (v) {
@@ -270,7 +268,6 @@ class CardPayment extends React.Component {
             document.getElementById('pay-btn').disabled = true;
             document.getElementById('pay-btn').style.backgroundColor = '\t#e1e3e6';
             document.getElementById('pay-btn').style.cursor = 'default';
-
         }
     }
 
@@ -311,7 +308,7 @@ class CardPayment extends React.Component {
                                     onChange={this.handleSumChange} onBlur={this.handleSumBlur}
                                     onFocus={(e) => e.target.placeholder = ''}/>
                         {/*            onFocus здесь используется, так как при наличии одновременно и плейсхолдера
-                                       и валюты текст накладывается дург на друга
+                                       и валюты текст накладывается друг на друга
                          */}
                         <label htmlFor="sum">Transfer amount must be greater than 0!</label>
                     </div>
@@ -325,15 +322,13 @@ class CardPayment extends React.Component {
                         <IconMaster className="icon" id="master" colored={true}/>
                         <IconMir className="icon" id="mir" colored={true}/>
                         <b id="bank"> </b>
-
                         <label htmlFor="card-number">Card number too short!</label>
                     </div>
                     <div>
                         <Input id="card-holder" placeholder="Card holder"
                                onKeyDown={this.handleCardholderKeyDown}
                                onBlur={this.handleCardholderBlur}
-                               onChange={this.handleCardholderChange}
-                        />
+                               onChange={this.handleCardholderChange}/>
                         <label htmlFor="card-holder">Card holder name must contain 2 words!</label>
                     </div>
                     <div>
