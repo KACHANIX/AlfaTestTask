@@ -53,17 +53,18 @@ class CardPayment extends React.Component {
         // здесь заглушка; если нужно отправлять данные куда-либо, то подойдет кусок кода приведенный ниже
 
 
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("POST", "/json-handler");
-        xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xmlhttp.send(JSON.stringify(
-            {
-                transferSum: this.state.transferSum,
-                cardNumber: parseInt(this.state.cardNumber),
-                cardholderName: this.state.cardholderName,
-                expirationDate: this.state.expirationMonth + '/' + this.state.expirationYear,
-                cvc: this.state.cvc
-            }));
+        // var xmlhttp = new XMLHttpRequest();
+        // xmlhttp.open("POST", "/json-handler");
+        // xmlhttp.setRequestHeader("Content-Type", "application/json");
+        // xmlhttp.send(JSON.stringify(
+        //     {
+        //         transferSum: this.state.transferSum,
+        //         cardNumber: parseInt(this.state.cardNumber),
+        //         cardholderName: this.state.cardholderName,
+        //         expirationDate: this.state.expirationMonth + '/' + this.state.expirationYear,
+        //         cvc: this.state.cvc
+        //     }));
+        alert('Here the information must be send to backend');
     }
 
     handleCardNumberChange(e) {
