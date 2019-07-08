@@ -266,7 +266,7 @@ class CardPayment extends React.Component {
 
         } else {
             document.getElementById('pay-btn').disabled = true;
-            document.getElementById('pay-btn').style.backgroundColor = '\t#e1e3e6';
+            document.getElementById('pay-btn').style.backgroundColor = '\t#CFD5DC';
             document.getElementById('pay-btn').style.cursor = 'default';
         }
     }
