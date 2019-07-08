@@ -10,7 +10,6 @@ import MoneyInput from 'arui-feather/money-input';
 import IconVisa from 'arui-feather/icon/brand/card-visa';
 import IconMaster from 'arui-feather/icon/brand/card-mastercard';
 import IconMir from 'arui-feather/icon/brand/card-mir';
-
 var lookup = require('binlookup')();
 
 class CardPayment extends React.Component {
@@ -100,6 +99,7 @@ class CardPayment extends React.Component {
 
     handleCardNumberChange(e) {
         let cardNumberInput = e;
+        //Захардкоженное определение платежной системы
         if (cardNumberInput[0] == 2) {
             document.getElementById('master').style.visibility = 'hidden';
             document.getElementById('visa').style.visibility = 'hidden';
@@ -120,6 +120,7 @@ class CardPayment extends React.Component {
             document.getElementById('mir').style.visibility = 'hidden';
         }
 
+        //Незахардкоженное определение банка
         if (cardNumberInput.length === 7) {
             lookup(cardNumberInput.replace(/\s/g, ''),
                 function (err, data) {
