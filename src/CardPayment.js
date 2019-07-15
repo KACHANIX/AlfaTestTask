@@ -91,7 +91,7 @@ class CardPayment extends React.Component {
     handleSumBlur(e) {
         // проверяем, что сумма не ноль
 
-        if (parseFloat(e.target.value) === 0) {
+        if (parseFloat(e.target.value.replace(',', '.')) === 0) {
             myLib.showSumError();
         }
         e.target.placeholder = 'Transfer amount'; // возвращаем плейсхолдер после того,
